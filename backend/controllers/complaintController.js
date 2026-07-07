@@ -11,7 +11,7 @@ exports.generateForensicReport = async (req, res) => {
     const complaint = await Complaint.findById(req.params.id);
     if (!complaint) return res.status(404).json({ error: 'Case not found' });
 
-    const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCv15kwKQdaRBwvrZoR09kcYIEJJWgDU_Y';
+    const apiKey = process.env.GEMINI_API_KEY || 'KEY';
     const MODEL = 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
