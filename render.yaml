@@ -1,0 +1,70 @@
+services:
+  # ----------------------------------------------------
+  # 1. AI Server (Python FastAPI)
+  # ----------------------------------------------------
+  - type: web
+    name: cyber-nethra-ai
+    plan: free
+    runtime: python
+    rootDir: ai_server
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python main.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+
+  # ----------------------------------------------------
+  # 2. Node Backend API (Express)
+  # ----------------------------------------------------
+  - type: web
+    name: cyber-nethra-backend
+    plan: free
+    runtime: node
+    rootDir: backend
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: MONGO_URI
+        sync: false # User needs to paste their MongoDB connection string in Render Dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_SERVER_URL
+        fromService:
+          type: web
+          name: cyber-nethra-ai
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # ----------------------------------------------------
+  # 3. React Frontend (Vite Static Site)
+  # ----------------------------------------------------
+  - type: web
+    name: cyber-nethra-frontend
+    runtime: static
+    rootDir: .
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "./dist"
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: VITE_BACKEND_URL
+        fromService:
+          type: web
+          name: cyber-nethra-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VITE_AI_SERVER_URL
+        fromService:
+          type: web
+          name: cyber-nethra-ai
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://cyber-nethra-backend.onrender.com/api/*
+      - type: rewrite
+        source: /uploads/*
+        destination: https://cyber-nethra-backend.onrender.com/uploads/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
